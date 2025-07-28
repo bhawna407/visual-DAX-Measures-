@@ -1,0 +1,76 @@
+# 📊 DAX Measures – Mother Dairy Power BI Project
+
+---
+
+## 🔺 Top 3 Products by Revenue
+```DAX
+Top3_Products_By_Revenue =
+CONCATENATEX(
+    TOPN(
+        3,
+        SUMMARIZE(
+            'Mother_Dairy_Products_2018_2025 2',
+            [Product Name],
+            "TotalRevenue", [TOTAL REVENUE]
+        ),
+        [TotalRevenue],
+        DESC
+    ),
+    [Product Name],
+    ", "
+)
+
+
+MoM_Sales_Change_% =
+VAR CurrMonth = [TOTAL SALES]
+VAR PrevMonth = CALCULATE([TOTAL SALES], PREVIOUSMONTH('Date'[Date]))
+RETURN
+IF(
+    NOT ISBLANK(PrevMonth),
+    DIVIDE(CurrMonth - PrevMonth, PrevMonth, 0),
+    BLANK()
+)
+
+
+MovingAvg_7Day_Sales =
+AVERAGEX(
+    DATESINPERIOD('Date'[Date], MAX('Date'[Date]), -7, DAY),
+    [TOTAL SALES]
+)
+
+
+
+Cumulative_YTD_Sales =
+TOTALYTD(
+    [TOTAL SALES],
+    'Date'[Date]
+)
+
+
+Growth_Category =
+SWITCH(
+    TRUE(),
+    [YoY_Revenue_Change_%] >= 0.20, "🚀 High Growth",
+    [YoY_Revenue_Change_%] >= 0.05, "📈 Moderate",
+    [YoY_Revenue_Change_%] >= 0, "😐 Stable",
+    "📉 Declining"
+)
+
+
+Top_Product_This_Month =
+CALCULATE(
+    FIRSTNONBLANK(
+        TOPN(
+            1,
+            SUMMARIZE(
+                'Mother_Dairy_Products_2018_2025 2',
+                [Product Name],
+                "Revenue", [TOTAL REVENUE]
+            ),
+            [Revenue], DESC
+        ),
+        [Product Name]
+    ),
+    MONTH('Date'[Date]) = MONTH(TODAY()),
+    YEAR('Date'[Date]) = YEAR(TODAY())
+)
